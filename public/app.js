@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Tab State
   let activeTab = 'dashboard';
 
+  // Platform Icon helper (resolves Lucide brand icon missing bundle issue)
+  function getPlatformIcon(platform, size = 14) {
+    if (platform === 'facebook') {
+      return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color:#1877f2; display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color:#0088cc; display:inline-block; vertical-align:middle; margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+  }
+
   // Modal State
   const modal = document.getElementById('client-modal');
   const clientForm = document.getElementById('client-form');
@@ -183,9 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
               <div>
                 <strong>${client.name}</strong> <span style="font-size:11px;color:var(--text-muted)">(${client.id})</span>
               </div>
-              <div style="display:flex;gap:8px;">
-                ${hasTg ? '<i data-lucide="send" class="icon-tg" style="width:14px;color:#0088cc;"></i>' : ''}
-                ${hasFb ? '<i data-lucide="facebook" class="icon-fb" style="width:14px;color:#1877f2;"></i>' : ''}
+              <div style="display:flex;gap:8px;align-items:center;">
+                ${hasTg ? getPlatformIcon('telegram', 14) : ''}
+                ${hasFb ? getPlatformIcon('facebook', 14) : ''}
               </div>
             </div>
           `;
@@ -227,12 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         recentList.innerHTML = recentChats.map(chat => {
           const time = new Date(chat.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const platformIcon = chat.platform === 'telegram' ? 'send' : 'facebook';
-          const platformColor = chat.platform === 'telegram' ? '#0088cc' : '#1877f2';
           return `
             <div class="dash-item dash-chat-item">
               <div class="dash-chat-meta">
-                <span><i data-lucide="${platformIcon}" style="width:12px;height:12px;color:${platformColor};display:inline-block;vertical-align:middle;"></i> ${chat.clientName} (${chat.username || 'User'})</span>
+                <span>${getPlatformIcon(chat.platform, 12)} ${chat.clientName} (${chat.username || 'User'})</span>
                 <span>${time}</span>
               </div>
               <div class="dash-chat-text">"<em>${chat.message}</em>"</div>
@@ -245,8 +251,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
-        document.getElementById('connection-alert').style.display = 'flex';
+      const alertBanner = document.getElementById('connection-alert');
+      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
+        alertBanner.style.display = 'flex';
+        alertBanner.innerHTML = `
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
+        `;
+      } else if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
+        alertBanner.style.display = 'flex';
       }
     }
   }
@@ -282,11 +295,11 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div class="client-channels">
                 <div class="channel-badge ${tgClass}">
-                  <i data-lucide="send" class="icon-tg"></i>
+                  ${getPlatformIcon('telegram', 14)}
                   <span>Telegram</span>
                 </div>
                 <div class="channel-badge ${fbClass}">
-                  <i data-lucide="facebook" class="icon-fb"></i>
+                  ${getPlatformIcon('facebook', 14)}
                   <span>Messenger</span>
                 </div>
               </div>
@@ -316,8 +329,15 @@ document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
     } catch (err) {
       listContainer.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; color: var(--accent-gold)">Failed to load bots: ${err.message}</div>`;
-      if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
-        document.getElementById('connection-alert').style.display = 'flex';
+      const alertBanner = document.getElementById('connection-alert');
+      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
+        alertBanner.style.display = 'flex';
+        alertBanner.innerHTML = `
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
+        `;
+      } else if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
+        alertBanner.style.display = 'flex';
       }
     }
   }
@@ -422,6 +442,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (err) {
       dropdown.innerHTML = '<option value="">Error loading bots</option>';
+      const alertBanner = document.getElementById('connection-alert');
+      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
+        alertBanner.style.display = 'flex';
+        alertBanner.innerHTML = `
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
+        `;
+      }
     }
   }
 
@@ -451,15 +479,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tbody.innerHTML = chats.map(chat => {
         const time = new Date(chat.created_at).toLocaleString();
-        const platIcon = chat.platform === 'telegram' ? 'send' : 'facebook';
-        const platColor = chat.platform === 'telegram' ? '#0088cc' : '#1877f2';
         
         return `
           <tr>
             <td style="white-space: nowrap; font-size:12px; color:var(--text-secondary);">${time}</td>
             <td>
               <span class="chat-platform ${chat.platform === 'telegram' ? 'tg' : 'fb'}">
-                <i data-lucide="${platIcon}" style="width:12px;height:12px;color:${platColor}"></i>
+                ${getPlatformIcon(chat.platform, 12)}
                 <span>${chat.platform === 'telegram' ? 'Telegram' : 'Messenger'}</span>
               </span>
             </td>
@@ -478,6 +504,14 @@ document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:red">Failed to load chat history: ${err.message}</td></tr>`;
+      const alertBanner = document.getElementById('connection-alert');
+      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
+        alertBanner.style.display = 'flex';
+        alertBanner.innerHTML = `
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
+        `;
+      }
     }
   }
 
