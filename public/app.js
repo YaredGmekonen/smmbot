@@ -245,6 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
+      if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
+        document.getElementById('connection-alert').style.display = 'flex';
+      }
     }
   }
 
@@ -313,6 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
     } catch (err) {
       listContainer.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; color: var(--accent-gold)">Failed to load bots: ${err.message}</div>`;
+      if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
+        document.getElementById('connection-alert').style.display = 'flex';
+      }
     }
   }
 

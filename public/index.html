@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -63,6 +63,12 @@
           </div>
         </div>
       </header>
+
+      <!-- Connection Alert Banner -->
+      <div id="connection-alert" class="connection-alert" style="display: none;">
+        <i data-lucide="alert-triangle"></i>
+        <span><strong>Configuration Required:</strong> Please replace the placeholder Supabase credentials in your <code>.env</code> file with your real keys from your Supabase Dashboard, then restart the server.</span>
+      </div>
 
       <!-- TAB: Dashboard -->
       <section class="tab-content active" id="tab-dashboard">
