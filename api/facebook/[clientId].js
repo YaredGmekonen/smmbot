@@ -4,7 +4,7 @@
 // ============================================================
 
 import { withSupabase } from "@supabase/server";
-import { handleFacebookWebhook, verifyFacebookWebhook } from "../../../lib/facebook.js";
+import { handleFacebookWebhook, verifyFacebookWebhook } from "../../lib/facebook.js";
 
 export const config = {
   runtime: "edge",

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vercel dev",
+    "local": "node scripts/local-server.js",
     "setup": "node scripts/setup.js",
     "deploy": "vercel --prod"
   },

@@ -4,7 +4,7 @@
 // ============================================================
 
 import { withSupabase } from "@supabase/server";
-import { handleTelegramUpdate } from "../../../lib/telegram.js";
+import { handleTelegramUpdate } from "../../lib/telegram.js";
 
 export const config = {
   runtime: "edge",
