@@ -13,6 +13,66 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="color:#0088cc; display:inline-block; vertical-align:middle; margin-right:4px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
   }
 
+  // Helper to show Supabase Table Setup warning banner with copyable SQL script
+  function showDbSchemaError(err) {
+    if (!err.message.includes("schema cache") && !err.message.includes("public.clients") && !err.message.includes("relation")) {
+      return;
+    }
+    const alertBanner = document.getElementById('connection-alert');
+    if (!alertBanner) return;
+    
+    alertBanner.style.display = 'flex';
+    alertBanner.style.flexDirection = 'column';
+    alertBanner.style.alignItems = 'flex-start';
+    alertBanner.innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <span><strong>Supabase Table Setup Required:</strong> The database tables were not found. Copy the SQL script below, run it in your Supabase SQL Editor, and refresh this page.</span>
+      </div>
+      <div style="width:100%; margin-top:12px;">
+        <button class="btn btn-secondary btn-sm" id="btn-toggle-sql" style="padding: 4px 8px; font-size:11px;">Show SQL Script</button>
+        <textarea id="warning-sql-code" readonly style="display:none; width:100%; font-family:monospace; font-size:11px; margin-top:8px; background:rgba(0,0,0,0.5); border:1px solid var(--border-glow); padding:10px; border-radius:8px; color:#a2a2c2; height:150px; resize:none; outline:none;">-- Create Clients Table
+CREATE TABLE clients (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  telegram_token TEXT,
+  telegram_channel_id TEXT,
+  facebook_page_token TEXT,
+  facebook_page_id TEXT,
+  facebook_app_secret TEXT,
+  facebook_verify_token TEXT,
+  ai_persona TEXT NOT NULL,
+  knowledge_base TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create Chat Logs Table
+CREATE TABLE chats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id TEXT REFERENCES clients(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
+  username TEXT,
+  platform TEXT NOT NULL,
+  message TEXT NOT NULL,
+  response TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);</textarea>
+      </div>
+    `;
+    
+    document.getElementById('btn-toggle-sql').addEventListener('click', (e) => {
+      e.preventDefault();
+      const area = document.getElementById('warning-sql-code');
+      if (area.style.display === 'none') {
+        area.style.display = 'block';
+        e.target.textContent = 'Hide SQL Script';
+      } else {
+        area.style.display = 'none';
+        e.target.textContent = 'Show SQL Script';
+      }
+    });
+  }
+
   // Modal State
   const modal = document.getElementById('client-modal');
   const clientForm = document.getElementById('client-form');
@@ -251,15 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      const alertBanner = document.getElementById('connection-alert');
-      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
-        alertBanner.style.display = 'flex';
-        alertBanner.innerHTML = `
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
-        `;
-      } else if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
-        alertBanner.style.display = 'flex';
+      showDbSchemaError(err);
+      if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
+        document.getElementById('connection-alert').style.display = 'flex';
       }
     }
   }
@@ -329,15 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
     } catch (err) {
       listContainer.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; color: var(--accent-gold)">Failed to load bots: ${err.message}</div>`;
-      const alertBanner = document.getElementById('connection-alert');
-      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
-        alertBanner.style.display = 'flex';
-        alertBanner.innerHTML = `
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
-        `;
-      } else if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
-        alertBanner.style.display = 'flex';
+      showDbSchemaError(err);
+      if (err.message.includes("API key") || err.message.includes("Invalid API key") || err.message.includes("key")) {
+        document.getElementById('connection-alert').style.display = 'flex';
       }
     }
   }
@@ -442,14 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (err) {
       dropdown.innerHTML = '<option value="">Error loading bots</option>';
-      const alertBanner = document.getElementById('connection-alert');
-      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
-        alertBanner.style.display = 'flex';
-        alertBanner.innerHTML = `
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
-        `;
-      }
+      showDbSchemaError(err);
     }
   }
 
@@ -504,14 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:red">Failed to load chat history: ${err.message}</td></tr>`;
-      const alertBanner = document.getElementById('connection-alert');
-      if (err.message.includes("schema cache") || err.message.includes("public.clients") || err.message.includes("relation")) {
-        alertBanner.style.display = 'flex';
-        alertBanner.innerHTML = `
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px; display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <span><strong>Supabase Table Setup Required:</strong> The <code>clients</code> table was not found in your database. Please run the SQL schema script in your Supabase SQL Editor as detailed in the <a href="file:///C:/Users/ThinkPad%2014/.gemini/antigravity-ide/brain/20dbb32a-fcb7-4191-b0d2-68c568d580ef/walkthrough.md" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;font-weight:600;">walkthrough.md</a>, then refresh this page.</span>
-        `;
-      }
+      showDbSchemaError(err);
     }
   }
 
