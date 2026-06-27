@@ -1,0 +1,19 @@
+{
+  "name": "geberew-social-bot",
+  "version": "1.0.0",
+  "description": "AI social media auto-reply bot for Ethiopian businesses",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "setup": "node scripts/setup.js",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@supabase/server": "^1.2.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}

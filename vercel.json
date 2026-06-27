@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/telegram/(.*)",
+      "dest": "/api/telegram/[clientId].js"
+    },
+    {
+      "src": "/api/facebook/(.*)",
+      "dest": "/api/facebook/[clientId].js"
+    },
+    {
+      "src": "/api/admin/(.*)",
+      "dest": "/api/admin/[route].js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

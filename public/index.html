@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Social Bot Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-glow"></div>
+        <i data-lucide="bot" class="logo-icon"></i>
+        <h2>AI Bot Manager</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-tab="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-tab="clients">
+          <i data-lucide="users"></i>
+          <span>Clients & Bots</span>
+        </button>
+        <button class="nav-btn" data-tab="chats">
+          <i data-lucide="message-square"></i>
+          <span>Chat Tracker</span>
+        </button>
+        <button class="nav-btn" data-tab="settings">
+          <i data-lucide="settings"></i>
+          <span>API Config</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="status-indicator online"></div>
+        <span>Connected to Supabase</span>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="page-title">
+          <h1 id="current-tab-title">Dashboard</h1>
+          <p id="current-tab-subtitle">Welcome back, manager. System is fully operational.</p>
+        </div>
+        <div class="system-status">
+          <div class="status-chip" id="status-gemini">
+            <span class="status-dot green"></span>
+            <span>Gemini 2.5 Flash</span>
+          </div>
+          <div class="status-chip" id="status-db">
+            <span class="status-dot green"></span>
+            <span>Supabase Active</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- TAB: Dashboard -->
+      <section class="tab-content active" id="tab-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card glow-teal">
+            <div class="stat-header">
+              <span class="stat-label">Total Clients</span>
+              <div class="stat-icon-wrapper teal"><i data-lucide="users"></i></div>
+            </div>
+            <h3 id="stat-total-clients">-</h3>
+            <p class="stat-subtext">Configured bot profiles</p>
+          </div>
+          <div class="stat-card glow-cyan">
+            <div class="stat-header">
+              <span class="stat-label">Total Active Chats</span>
+              <div class="stat-icon-wrapper cyan"><i data-lucide="message-circle"></i></div>
+            </div>
+            <h3 id="stat-total-chats">-</h3>
+            <p class="stat-subtext">Logged conversations</p>
+          </div>
+          <div class="stat-card glow-gold">
+            <div class="stat-header">
+              <span class="stat-label">Platform Stats</span>
+              <div class="stat-icon-wrapper gold"><i data-lucide="share-2"></i></div>
+            </div>
+            <div class="mini-stats">
+              <div><i data-lucide="send" class="mini-icon"></i> <span id="stat-tg-chats">-</span> Telegram</div>
+              <div><i data-lucide="facebook" class="mini-icon"></i> <span id="stat-fb-chats">-</span> Facebook</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-split">
+          <div class="card client-quick-list">
+            <div class="card-header">
+              <h3>Active Clients</h3>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('clients')">Manage</button>
+            </div>
+            <div class="list-wrapper" id="dash-clients-list">
+              <div class="loading-state"><div class="spinner"></div>Loading clients...</div>
+            </div>
+          </div>
+
+          <div class="card recent-activity">
+            <div class="card-header">
+              <h3>Recent Conversations</h3>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('chats')">View All</button>
+            </div>
+            <div class="list-wrapper" id="dash-recent-chats">
+              <div class="loading-state"><div class="spinner"></div>Loading activity...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Clients -->
+      <section class="tab-content" id="tab-clients">
+        <div class="clients-action-bar">
+          <button class="btn btn-primary" id="btn-add-client">
+            <i data-lucide="plus"></i>
+            <span>Add New Client Bot</span>
+          </button>
+        </div>
+
+        <div class="clients-grid" id="clients-list">
+          <!-- Dynamically filled -->
+        </div>
+
+        <!-- CLIENT MODAL (Add / Edit Client) -->
+        <div class="modal" id="client-modal">
+          <div class="modal-content glass-card">
+            <div class="modal-header">
+              <h2 id="modal-title">Configure Client Bot</h2>
+              <button class="close-btn" id="btn-close-modal">&times;</button>
+            </div>
+            <form id="client-form" class="modal-form">
+              <input type="hidden" id="form-action" value="create">
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="client-id">Client Slug (Unique ID, lowercase, e.g., 'makiba') *</label>
+                  <input type="text" id="client-id" required placeholder="e.g. geberew" pattern="[a-z0-9_-]+">
+                </div>
+                <div class="form-group">
+                  <label for="client-name">Business Display Name *</label>
+                  <input type="text" id="client-name" required placeholder="e.g. ገበሬው ነጋዴ">
+                </div>
+              </div>
+
+              <div class="accordion-section">
+                <div class="accordion-header">
+                  <i data-lucide="send" class="icon-tg"></i>
+                  <h4>Telegram Configuration</h4>
+                  <i data-lucide="chevron-down" class="acc-chevron"></i>
+                </div>
+                <div class="accordion-content">
+                  <div class="form-group">
+                    <label for="telegram-token">Telegram Bot Token (from @BotFather)</label>
+                    <input type="text" id="telegram-token" placeholder="8992479778:AAGlERa...">
+                  </div>
+                  <div class="form-group">
+                    <label for="telegram-channel">Telegram Channel ID / Handle (Optional)</label>
+                    <input type="text" id="telegram-channel" placeholder="e.g. @GeberewNegade">
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-section">
+                <div class="accordion-header">
+                  <i data-lucide="facebook" class="icon-fb"></i>
+                  <h4>Facebook Messenger Configuration</h4>
+                  <i data-lucide="chevron-down" class="acc-chevron"></i>
+                </div>
+                <div class="accordion-content">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="facebook-page-id">Facebook Page ID</label>
+                      <input type="text" id="facebook-page-id" placeholder="e.g. 994741330379639">
+                    </div>
+                    <div class="form-group">
+                      <label for="facebook-verify-token">Facebook Webhook Verify Token</label>
+                      <input type="text" id="facebook-verify-token" placeholder="e.g. geberew_secret_2024">
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="facebook-page-token">Page Access Token</label>
+                      <input type="password" id="facebook-page-token" placeholder="EAABkk...">
+                    </div>
+                    <div class="form-group">
+                      <label for="facebook-app-secret">App Secret</label>
+                      <input type="password" id="facebook-app-secret" placeholder="abc123...">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-persona">AI Assistant Persona / System Instructions *</label>
+                <textarea id="ai-persona" rows="5" required placeholder="You are an Ethiopian teff seller AI. Reply in Amharic warmly..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="knowledge-base">Business Knowledge Base / Q&A Facts (Feed Text File or Type Details)</label>
+                <textarea id="knowledge-base" rows="5" placeholder="Q: Where is your warehouse?&#10;A: Bishoftu (Debre Zeit)&#10;&#10;Q: Do you deliver?&#10;A: Yes, free delivery anywhere in Ethiopia."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-client">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btn-save-client">Save Configuration</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Chat Tracker -->
+      <section class="tab-content" id="tab-chats">
+        <div class="chats-filter-bar">
+          <div class="form-group">
+            <label for="chat-client-select">Select Bot Client</label>
+            <select id="chat-client-select">
+              <option value="">Choose a bot...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card chat-logs-card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Platform</th>
+                  <th>User ID / Username</th>
+                  <th>User Message</th>
+                  <th>Bot Response</th>
+                </tr>
+              </thead>
+              <tbody id="chats-table-body">
+                <tr>
+                  <td colspan="5" class="empty-state">Select a client bot to load conversation history.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: Settings -->
+      <section class="tab-content" id="tab-settings">
+        <div class="settings-container">
+          <div class="card settings-card">
+            <div class="card-header">
+              <h3>System Credentials Setup</h3>
+            </div>
+            <div class="card-body">
+              <p class="description">These credentials are configured in your local <code>.env</code> file or Vercel dashboard. They cannot be edited directly here for security reasons, but you can check their statuses below.</p>
+              
+              <div class="credential-item">
+                <div class="cred-info">
+                  <h4>Gemini API Key</h4>
+                  <p class="status-text text-green" id="env-gemini-status">Checking...</p>
+                </div>
+                <div class="cred-dot-indicator green" id="env-gemini-indicator"></div>
+              </div>
+
+              <div class="credential-item">
+                <div class="cred-info">
+                  <h4>Supabase Endpoint</h4>
+                  <p class="status-text text-green" id="env-supabase-status">Checking...</p>
+                </div>
+                <div class="cred-dot-indicator green" id="env-supabase-indicator"></div>
+              </div>
+
+              <div class="credential-item">
+                <div class="cred-info">
+                  <h4>Local Vercel Dev URL</h4>
+                  <p class="status-text" id="env-url-status">Checking...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
