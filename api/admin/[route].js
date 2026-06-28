@@ -4,6 +4,7 @@
 // ============================================================
 
 import { withSupabase } from "@supabase/server";
+import { getAllClientsConfig } from "../../config/clients.js";
 
 export const config = {
   runtime: "edge",
@@ -41,13 +42,29 @@ export default withSupabase({ auth: "none" }, async (req, ctx) => {
     if (action === "clients") {
       // GET: List all clients
       if (req.method === "GET") {
-        const { data: clients, error } = await ctx.supabaseAdmin
+        let { data: clients, error } = await ctx.supabaseAdmin
           .from("clients")
           .select("*")
           .order("created_at", { ascending: true });
 
         if (error) {
           return Response.json({ ok: false, error: error.message }, { status: 500, headers: corsHeaders });
+        }
+
+        // If empty, trigger auto-seeding
+        if (!clients || clients.length === 0) {
+          console.log("[Admin API] Database is empty. Seeding default client bots...");
+          await getAllClientsConfig();
+          
+          // Re-fetch seeded data
+          const { data: reFetched, error: reError } = await ctx.supabaseAdmin
+            .from("clients")
+            .select("*")
+            .order("created_at", { ascending: true });
+          
+          if (!reError && reFetched) {
+            clients = reFetched;
+          }
         }
 
         return Response.json({ ok: true, clients: clients || [] }, { headers: corsHeaders });
